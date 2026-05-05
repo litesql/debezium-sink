@@ -99,7 +99,7 @@ UPDATE temp.debezium_sink SET offsets = '{"0":{"Epoch":0,"Offset":12}}' WHERE to
 You can configure the connection to the broker by passing parameters to the VIRTUAL TABLE.
 
 | Param | Description | Default |
-|-------|------|-------------|---------|
+|-------|-------------|---------|
 | brokers | Comma delimited list of seed brokers | localhost:9092 |
 | client_id | Client ID  | sqlite |
 | consumer_group | Consumer group | |
