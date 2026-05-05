@@ -1,0 +1,5 @@
+*.so
+debezium.h
+
+# Added by goreleaser init:
+dist/
