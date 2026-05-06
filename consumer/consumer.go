@@ -18,7 +18,7 @@ type Consumer struct {
 	quit         chan struct{}
 }
 
-type HandlerFn func(changes []Change) error
+type HandlerFn func(changes []Change, sources map[string]any) error
 
 func New(opts []kgo.Opt, useNamespace bool) (*Consumer, error) {
 	if err := kgo.ValidateOpts(opts...); err != nil {
@@ -74,6 +74,7 @@ func (c *Consumer) Start(logger *slog.Logger, handler HandlerFn) {
 					rs = append(rs, r)
 					return
 				}
+
 				schema, table, ok := schemaTableFromTopic(r.Topic)
 				if !ok {
 					rs = append(rs, r)
@@ -99,7 +100,7 @@ func (c *Consumer) Start(logger *slog.Logger, handler HandlerFn) {
 				change.Schema = schema
 				change.Table = table
 				changes = append(changes, change)
-				err := handler(changes)
+				err := handler(changes, envelope.Payload.Source)
 				if err != nil {
 					return
 				}

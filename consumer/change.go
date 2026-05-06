@@ -49,6 +49,7 @@ type debeziumField struct {
 type debeziumPayload struct {
 	Before map[string]any `json:"before"`
 	After  map[string]any `json:"after"`
+	Source map[string]any `json:"source"`
 	Op     string         `json:"op"`
 	TsNs   int64          `json:"ts_ns"`
 }

@@ -1,4 +1,4 @@
-# sqlite-debezium-sink
+# SQLite Debezium Sink
 SQLite Extension to integrate with Debezium.
 
 ## Installation
@@ -105,6 +105,8 @@ You can configure the connection to the broker by passing parameters to the VIRT
 | consumer_group | Consumer group | |
 | isolation_level | Fetch isolation level. 0 = read uncommitted, 1 = read committed | 0 |
 | auto_offset_reset | Determines the behavior of a consumer group when there is no valid committed offset for a partition. (latest, earliest or none) | |
+use_namespace | Keep schema/namespace instead of using the main database | false |
+position_tracker_table | Table for replication position checkpoints | debezium_stat |
 | sasl_type| SASL type: plain, sha256 or sha512 | |
 | sasl_user | SASL user | |
 | sasl_pass | SASL pass | |

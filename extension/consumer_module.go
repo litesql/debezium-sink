@@ -38,10 +38,12 @@ func (m *ConsumerModule) Connect(conn *sqlite.Conn, args []string, declare func(
 		caFilePath      string
 		insecure        *bool
 
-		clientID     string
-		useNamespace bool
-		logger       string
-		err          error
+		clientID             string
+		useNamespace         bool
+		positionTrackerTable string
+
+		logger string
+		err    error
 	)
 
 	if len(args) > 3 {
@@ -60,6 +62,8 @@ func (m *ConsumerModule) Connect(conn *sqlite.Conn, args []string, declare func(
 					return nil, fmt.Errorf("invalid %q option: %v", k, err)
 				}
 				useNamespace = b
+			case config.PositionTrackerTable:
+				positionTrackerTable = v
 			case config.Logger:
 				logger = v
 			case config.Brokers:
@@ -116,6 +120,20 @@ func (m *ConsumerModule) Connect(conn *sqlite.Conn, args []string, declare func(
 		}
 	}
 
+	if positionTrackerTable == "" {
+		positionTrackerTable = config.DefaultPositionTrackerTabName
+	}
+
+	err = conn.Exec(fmt.Sprintf(
+		`CREATE TABLE IF NOT EXISTS %s(		   	
+		   	source JSON,
+		   	server_time TEXT,
+			CHECK(rowid = 1)
+		)`, positionTrackerTable), nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating %q table: %w", positionTrackerTable, err)
+	}
+
 	var (
 		useTLS    bool
 		tlsConfig tls.Config
@@ -164,7 +182,7 @@ func (m *ConsumerModule) Connect(conn *sqlite.Conn, args []string, declare func(
 		return nil, fmt.Errorf("invalid kafka options: %w", err)
 	}
 
-	vtab, err := NewConsumerVirtualTable(virtualTableName, opts, useNamespace, conn, logger)
+	vtab, err := NewConsumerVirtualTable(virtualTableName, opts, positionTrackerTable, useNamespace, conn, logger)
 	if err != nil {
 		return nil, err
 	}

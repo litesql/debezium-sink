@@ -14,11 +14,13 @@ const (
 	Logger      = "logger"        // Log errors to "stdout, stderr or file:/path/to/log.txt"
 
 	// Consumer module config
-	UseNamespace    = "use_namespace"     // Keep schema/namespace (otherwise always use main database)
-	ConsumerGroup   = "consumer_group"    // Consumer group
-	IsolationLevel  = "isolation_level"   // Fetch isolation level: 0 = read uncommitted (default), 1 = read committed
-	AutoOffsetReset = "auto_offset_reset" // Determines the behavior of a consumer group when there is no valid committed offset for a partition. (latest, earliest, none)
+	UseNamespace         = "use_namespace"          // Keep schema/namespace (otherwise always use main database)
+	PositionTrackerTable = "position_tracker_table" // Table to store consumer position, source and checkpoints
+	ConsumerGroup        = "consumer_group"         // Consumer group
+	IsolationLevel       = "isolation_level"        // Fetch isolation level: 0 = read uncommitted (default), 1 = read committed
+	AutoOffsetReset      = "auto_offset_reset"      // Determines the behavior of a consumer group when there is no valid committed offset for a partition. (latest, earliest, none)
 
-	DefaultConsumerVTabName = "debezium"
-	DefaultClientID         = "sqlite"
+	DefaultConsumerVTabName       = "debezium"
+	DefaultClientID               = "sqlite"
+	DefaultPositionTrackerTabName = "debezium_stat"
 )

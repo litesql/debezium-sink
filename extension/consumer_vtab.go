@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/walterwanderley/sqlite"
@@ -18,14 +19,15 @@ import (
 )
 
 type ConsumerVirtualTable struct {
-	virtualTableName string
-	tableName        string
-	client           *consumer.Consumer
-	subscriptions    []*subscription
-	stmtMu           sync.Mutex
-	mu               sync.Mutex
-	logger           *slog.Logger
-	loggerCloser     io.Closer
+	virtualTableName   string
+	tableName          string
+	client             *consumer.Consumer
+	subscriptions      []*subscription
+	updatePositionStmt *sqlite.Stmt
+	stmtMu             sync.Mutex
+	mu                 sync.Mutex
+	logger             *slog.Logger
+	loggerCloser       io.Closer
 }
 
 type subscription struct {
@@ -33,7 +35,7 @@ type subscription struct {
 	offsets map[int32]kgo.EpochOffset
 }
 
-func NewConsumerVirtualTable(virtualTableName string, opts []kgo.Opt, useNamespace bool, conn *sqlite.Conn, loggerDef string) (*ConsumerVirtualTable, error) {
+func NewConsumerVirtualTable(virtualTableName string, opts []kgo.Opt, positionTrackerTable string, useNamespace bool, conn *sqlite.Conn, loggerDef string) (*ConsumerVirtualTable, error) {
 
 	vtab := ConsumerVirtualTable{
 		virtualTableName: virtualTableName,
@@ -52,13 +54,18 @@ func NewConsumerVirtualTable(virtualTableName string, opts []kgo.Opt, useNamespa
 	vtab.loggerCloser = loggerCloser
 	vtab.logger = logger
 
+	vtab.updatePositionStmt, _, err = conn.Prepare("REPLACE INTO " + positionTrackerTable + "(`rowid`, source, server_time) VALUES(1, ?, ?)")
+	if err != nil {
+		return nil, fmt.Errorf("preparing position tracker statement: %w", err)
+	}
+
 	go client.Start(logger, vtab.handle(conn, useNamespace))
 
 	return &vtab, nil
 }
 
 func (vt *ConsumerVirtualTable) handle(conn *sqlite.Conn, useNamespace bool) consumer.HandlerFn {
-	return func(changeset []consumer.Change) error {
+	return func(changeset []consumer.Change, source map[string]any) error {
 		vt.stmtMu.Lock()
 		defer vt.stmtMu.Unlock()
 
@@ -68,8 +75,10 @@ func (vt *ConsumerVirtualTable) handle(conn *sqlite.Conn, useNamespace bool) con
 		}
 		defer conn.Exec("ROLLBACK", nil)
 
+		var serverTime time.Time
 		for _, change := range changeset {
 			vt.logger.Debug("applying changeset", "change", change)
+			serverTime = change.ServerTime
 			tableName := change.Table
 			if useNamespace {
 				if change.Schema == "db" {
@@ -126,6 +135,22 @@ func (vt *ConsumerVirtualTable) handle(conn *sqlite.Conn, useNamespace bool) con
 				return fmt.Errorf("failed to exec %q: %w", sql, err)
 			}
 		}
+
+		err = vt.updatePositionStmt.Reset()
+		if err != nil {
+			vt.logger.Error("failed to reset position tracker statement", "server_time", serverTime, "source", source)
+			return err
+		}
+		sourceJson, _ := json.Marshal(source)
+		vt.updatePositionStmt.BindText(1, string(sourceJson))
+		vt.updatePositionStmt.BindText(2, serverTime.Format(time.RFC3339))
+
+		_, err = vt.updatePositionStmt.Step()
+		if err != nil {
+			vt.logger.Error("failed to update position tracker", "server_time", serverTime, "source", source, "error", err)
+			return fmt.Errorf("updating position tracker: %w", err)
+		}
+
 		return conn.Exec("COMMIT", nil)
 	}
 }
