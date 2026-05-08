@@ -125,6 +125,9 @@ func (vt *ConsumerVirtualTable) handle(conn *sqlite.Conn, useNamespace bool) con
 				}
 				sql = fmt.Sprintf("DELETE FROM `%s` WHERE %s", tableName, strings.Join(whereClause, " AND "))
 				err = conn.Exec(sql, nil, args...)
+			case "TRUNCATE":
+				sql = fmt.Sprintf("DELETE FROM `%s`", tableName)
+				err = conn.Exec(sql, nil)
 			case "SQL":
 				err = conn.Exec(change.SQL, nil)
 			default:

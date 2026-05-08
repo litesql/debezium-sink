@@ -12,5 +12,5 @@ github.com/twmb/franz-go/pkg/kmsg v1.13.1 h1:fG5kItwysTk5UXqVwb64EpQEy3TydF3vYYK
 github.com/twmb/franz-go/pkg/kmsg v1.13.1/go.mod h1:+DPt4NC8RmI6hqb8G09+3giKObE6uD2Eya6CfqBpeJY=
 github.com/walterwanderley/sqlite v0.0.0-20250807085442-1c89b916e683 h1:AsMF1ofVEBz6SCUF0yjNVqQow0UzkbeIpQh2EGXq02k=
 github.com/walterwanderley/sqlite v0.0.0-20250807085442-1c89b916e683/go.mod h1:eO9RhTVaP4wop+KKdOZuL+PoDGN87GEgMGgWqCiutdQ=
-golang.org/x/crypto v0.50.0 h1:zO47/JPrL6vsNkINmLoo/PH1gcxpls50DNogFvB5ZGI=
-golang.org/x/crypto v0.50.0/go.mod h1:3muZ7vA7PBCE6xgPX7nkzzjiUq87kRItoJQM1Yo8S+Q=
+golang.org/x/crypto v0.51.0 h1:IBPXwPfKxY7cWQZ38ZCIRPI50YLeevDLlLnyC5wRGTI=
+golang.org/x/crypto v0.51.0/go.mod h1:8AdwkbraGNABw2kOX6YFPs3WM22XqI4EXEd8g+x7Oc8=
